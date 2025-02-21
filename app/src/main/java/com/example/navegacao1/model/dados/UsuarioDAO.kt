@@ -35,13 +35,37 @@ class UsuarioDAO {
             }
     }
 
-    fun buscarPorId(id: String, callback: (Usuario) -> Unit) {
-        //TODO implemente buscar por Id
+    fun buscarPorId(id: String, callback: (Usuario?) -> Unit) {
+        db.collection("usuarios").document(id).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val usuario = document.toObject<Usuario>()
+                    callback(usuario)
+                } else {
+                    callback(null)
+                }
+            }
+            .addOnFailureListener {
+                callback(null)
+            }
     }
 
 
-    fun adicionar(usuario: Usuario, callback: (Usuario) -> Unit) {
-        //TODO implemente adicionar
+    fun adicionar(usuario: Usuario, callback: (Usuario?) -> Unit) {
+        db.collection("usuarios").add(usuario)
+            .addOnSuccessListener { document ->
+                val usuarioComId = usuario.copy(id = document.id)
+                document.set(usuarioComId)
+                    .addOnSuccessListener {
+                        callback(usuarioComId)
+                    }
+                    .addOnFailureListener {
+                        callback(null)
+                    }
+            }
+            .addOnFailureListener {
+                callback(null)
+            }
     }
 
 }
